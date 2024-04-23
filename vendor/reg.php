@@ -13,7 +13,6 @@ if ($password == $access_password) {
     $select_user = mysqli_fetch_assoc($select_user); // Преобразуем результат запроса в ассоциативный массив
 
     if(!empty($select_user)) { // Проверяем, если результат запроса пустой (пользователь не найден)
-        $_SESSION['errReg'] = "Пользователь с таким Email уже существует!"; // Устанавливаем сообщение об ошибке в сессионную переменную
         header("Location: ../reg.php"); // Перенаправляем пользователя на предыдущую страницу
     } else {
         $pass_hash = password_hash($password, PASSWORD_DEFAULT); 
@@ -24,6 +23,5 @@ if ($password == $access_password) {
         header("Location: ../login.php");
     }
 } else {
-    $_SESSION['errReg'] = "Введенные пароли не совпадают!"; // Устанавливаем сообщение об ошибке в сессионную переменную
     header("Location: ../reg.php"); // Перенаправляем пользователя на предыдущую страницу
 }

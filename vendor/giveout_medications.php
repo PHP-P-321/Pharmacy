@@ -1,10 +1,12 @@
 <?php
-session_start();
-require_once("../db/db.php");
+session_start(); // Начинаем сессию для работы с сессионными переменными
 
+require_once("../db/db.php"); // Подключаем файл с настройками базы данных
+
+// Получаем id заявки из GET-запроса
 $id_request = $_GET['id_request'];
 
-// Получаем информацию о заявке
+// Выполняем запрос к базе данных для получения информации о заявке
 $query_request = mysqli_query($connect, "SELECT * FROM `requests` WHERE `id` = '$id_request'");
 $request_data = mysqli_fetch_assoc($query_request);
 
@@ -24,34 +26,23 @@ if ($request_data) {
         if ($medication_data) {
             // Разбиваем строку с количествами препарата на разных складах
             $quantities_on_warehouses = explode(', ', $medication_data['quantity_medication']);
-            // Копируем массив, чтобы сохранить исходные значения
-            $original_quantities_on_warehouses = $quantities_on_warehouses;
-
-            // Получаем список id складов для данного препарата
-            $warehouse_ids = explode(', ', $medication_data['id_warehouse']);
 
             // Обновляем количество препарата на каждом складе
-            for ($i = 0; $i < count($warehouse_ids); $i++) {
+            foreach ($quantities_on_warehouses as &$quantity_on_warehouse) {
                 // Вычитаем запрошенное количество из общего количества препарата на складе
-                $quantities_on_warehouses[$i] -= $quantity;
+                $quantity_on_warehouse -= $quantity;
             }
+            unset($quantity_on_warehouse); // Удаляем ссылку на последний элемент
 
             // Находим максимальное значение
             $max_quantity = max($quantities_on_warehouses);
 
             // Обновляем запись в таблице medications только с максимальным количеством
-            $new_quantities = [];
-            for ($i = 0; $i < count($warehouse_ids); $i++) {
-                if ($quantities_on_warehouses[$i] === $max_quantity) {
-                    $new_quantities[] = $max_quantity;
-                } else {
-                    // Восстанавливаем исходное значение для склада, который не изменился
-                    $new_quantities[] = $original_quantities_on_warehouses[$i];
-                }
-            }
+            $new_quantities = array_fill(0, count($quantities_on_warehouses), $max_quantity);
             $new_quantities_str = implode(', ', $new_quantities);
             mysqli_query($connect, "UPDATE `medications` SET `quantity_medication` = '$new_quantities_str' WHERE `id` = '$medication_id'");
 
+            // Устанавливаем статус заявки на выполненный
             mysqli_query($connect, "UPDATE `requests` SET `status` = 1 WHERE `id` = '$id_request'");
         }
     }

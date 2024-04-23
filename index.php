@@ -20,8 +20,6 @@ $select_reasons = mysqli_fetch_all($select_reasons);
 $select_requests = mysqli_query($connect, "SELECT * FROM `requests` WHERE `status` != 1");
 $select_requests = mysqli_fetch_all($select_requests);
 
-var_dump($select_requests);
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -30,42 +28,7 @@ var_dump($select_requests);
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Главная</title>
-    <style>
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            width: 300px;
-        }
-        form p {
-            margin: 0;
-        }
-        .wrap {
-            display: flex;
-            justify-content: space-between;
-        }
-        .requests {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        .request {
-            position: relative;
-        }
-        .request.red {
-            background-color: red;
-        }
-        .request.red a {
-            color: white;
-        }
-        .request a {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            color: black;
-            text-decoration: none;
-        }
-    </style>
+    <link rel="stylesheet" href="./assets/style/style.css">
 </head>
 <body>
     <a href="./logout.php">Выйти</a>
@@ -176,40 +139,9 @@ var_dump($select_requests);
     <?php } ?>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var warehouseFromSelect = document.getElementById('warehouseFromSelect');
-            var warehouseToSelect = document.getElementById('warehouseToSelect');
-            var quantityInput = document.getElementById('quantityInput');
-            var medicationSelect = document.getElementById('medicationSelect');
-            var medicationsData = <?= json_encode($select_not_deleted_medications) ?>;
-
-            function updatePlaceholder() {
-                var selectedMedicationId = medicationSelect.value;
-                var selectedWarehouseId = warehouseFromSelect.value;
-
-                var medication = medicationsData.find(function(item) {
-                    return item[0] === selectedMedicationId;
-                });
-
-                if (medication) {
-                    var quantities = medication[3].split(', ');
-                    var warehouseIds = medication[1].split(', ');
-
-                    var index = warehouseIds.indexOf(selectedWarehouseId);
-                    if (index !== -1) {
-                        quantityInput.placeholder = quantities[index];
-                    } else {
-                        quantityInput.placeholder = 'Нет на складе';
-                    }
-                }
-            }
-
-            warehouseFromSelect.addEventListener('change', updatePlaceholder);
-            warehouseToSelect.addEventListener('change', updatePlaceholder);
-            medicationSelect.addEventListener('change', updatePlaceholder);
-
-            updatePlaceholder();
-        });
+        // Передача данных через скриптовую переменную
+        var medicationsData = <?php echo json_encode($select_not_deleted_medications); ?>;
     </script>
+    <script src="./assets/script/main.js"></script>
 </body>
 </html>
