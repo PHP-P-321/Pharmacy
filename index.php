@@ -11,6 +11,12 @@ require_once("./db/db.php");
 $select_warehouses = mysqli_query($connect, "SELECT `id`, `name_warehouse` FROM `warehouses`");
 $select_warehouses = mysqli_fetch_all($select_warehouses);
 
+$select_not_deleted_medications = mysqli_query($connect, "SELECT * FROM `medications` WHERE `id` NOT IN (SELECT `id_medication` FROM `deleted_medications`);");
+$select_not_deleted_medications = mysqli_fetch_all($select_not_deleted_medications);
+
+$select_reasons = mysqli_query($connect, "SELECT * FROM `reasons`");
+$select_reasons = mysqli_fetch_all($select_reasons);
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -56,9 +62,18 @@ $select_warehouses = mysqli_fetch_all($select_warehouses);
         </div>
         <div class="right">
             <h2>Списать лекарство</h2>
-            <form action="./vendor/delete_medication.php" method="post">
-
-            <input type="submit" value="Списать">
+            <form action="./vendor/delete_medication.php" method="post" id="deleteForm">
+                <select name="id_medication" required>
+                    <?php foreach($select_not_deleted_medications as $medication) { ?>
+                        <option value="<?= $medication[0] ?>"><?= $medication[2] ?></option>
+                    <?php } ?>
+                </select>
+                <select name="id_reason" required>
+                    <?php foreach($select_reasons as $reason) { ?>
+                        <option value="<?= $reason[0] ?>"><?= $reason[1] ?></option>
+                    <?php } ?>
+                </select>
+                <input type="submit" value="Списать">
             </form>
         </div>
     <?php } elseif($_COOKIE['role'] == 2) { ?>
