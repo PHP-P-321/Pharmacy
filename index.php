@@ -17,8 +17,10 @@ $select_not_deleted_medications = mysqli_fetch_all($select_not_deleted_medicatio
 $select_reasons = mysqli_query($connect, "SELECT * FROM `reasons`");
 $select_reasons = mysqli_fetch_all($select_reasons);
 
-$select_requests = mysqli_query($connect, "SELECT * FROM `requests` WHERE `to_whom` = 1 AND `status` != 1");
+$select_requests = mysqli_query($connect, "SELECT * FROM `requests` WHERE `status` != 1");
 $select_requests = mysqli_fetch_all($select_requests);
+
+var_dump($select_requests);
 
 ?>
 <!DOCTYPE html>
@@ -112,14 +114,14 @@ $select_requests = mysqli_fetch_all($select_requests);
                 <h2>Список заявок на выдачу препаратов для отделений</h2>
                 <div class="requests">
                     <?php foreach($select_requests as $request) { ?>
-                        <div class="request<?= ($request[4] == 1) ? ' red' : '' ?>">
+                        <div class="request<?= ($request[3] == 1) ? ' red' : '' ?>">
                             <ul>
                                 <?php
                                 // Разбиваем строку с id препаратов на отдельные id
-                                $medication_ids = explode(', ', $request[2]);
+                                $medication_ids = explode(', ', $request[1]);
 
                                 // Разбиваем строку с количествами препаратов на отдельные значения
-                                $quantities = explode(', ', $request[3]);
+                                $quantities = explode(', ', $request[2]);
 
                                 // Выполняем запрос в таблицу medications для каждого id препарата
                                 foreach (array_combine($medication_ids, $quantities) as $medication_id => $quantity) {
