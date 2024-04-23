@@ -8,8 +8,6 @@ if(empty($_COOKIE['id_user'])) {
 
 require_once("../db/db.php"); // Подключаем файл с настройками базы данных
 
-var_dump($_POST);
-
 $id_medication = $_POST['id_medication'];
 $id_warehouse_from = $_POST['id_warehouse_from'];
 $id_warehouse_to = $_POST['id_warehouse_to'];
@@ -52,7 +50,5 @@ if ($medication_data) {
     header("Location: ../index.php");
 } else {
     // В случае, если данные о препарате не найдены, можно выполнить какое-то другое действие, например, вывести ошибку
-    echo "Данные о препарате не найдены.";
+    header("Location: ../index.php");
 }
-
-header("Location: ../index.php");

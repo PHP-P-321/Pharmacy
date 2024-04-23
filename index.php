@@ -14,10 +14,11 @@ $select_warehouses = mysqli_fetch_all($select_warehouses);
 $select_not_deleted_medications = mysqli_query($connect, "SELECT * FROM `medications` WHERE `id` NOT IN (SELECT `id_medication` FROM `deleted_medications`);");
 $select_not_deleted_medications = mysqli_fetch_all($select_not_deleted_medications);
 
-var_dump($select_not_deleted_medications);
-
 $select_reasons = mysqli_query($connect, "SELECT * FROM `reasons`");
 $select_reasons = mysqli_fetch_all($select_reasons);
+
+$select_requests = mysqli_query($connect, "SELECT * FROM `requests` WHERE `to_whom` = 1 AND `status` != 1");
+$select_requests = mysqli_fetch_all($select_requests);
 
 ?>
 <!DOCTYPE html>
@@ -40,6 +41,27 @@ $select_reasons = mysqli_fetch_all($select_reasons);
         .wrap {
             display: flex;
             justify-content: space-between;
+        }
+        .requests {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .request {
+            position: relative;
+        }
+        .request.red {
+            background-color: red;
+        }
+        .request.red a {
+            color: white;
+        }
+        .request a {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            color: black;
+            text-decoration: none;
         }
     </style>
 </head>
@@ -88,7 +110,35 @@ $select_reasons = mysqli_fetch_all($select_reasons);
         <div class="wrap">
             <div class="left">
                 <h2>Список заявок на выдачу препаратов для отделений</h2>
+                <div class="requests">
+                    <?php foreach($select_requests as $request) { ?>
+                        <div class="request<?= ($request[4] == 1) ? ' red' : '' ?>">
+                            <ul>
+                                <?php
+                                // Разбиваем строку с id препаратов на отдельные id
+                                $medication_ids = explode(', ', $request[2]);
 
+                                // Разбиваем строку с количествами препаратов на отдельные значения
+                                $quantities = explode(', ', $request[3]);
+
+                                // Выполняем запрос в таблицу medications для каждого id препарата
+                                foreach (array_combine($medication_ids, $quantities) as $medication_id => $quantity) {
+                                    $query_medication = mysqli_query($connect, "SELECT * FROM `medications` WHERE `id` = '$medication_id'");
+                                    $medication_data = mysqli_fetch_assoc($query_medication);
+
+                                    // Выводим информацию о препарате, если она получена
+                                    if ($medication_data) {?>
+                                        <li>
+                                            Препарат - <?= $medication_data['name_medication'] ?> | Количество - <?= $quantity ?>
+                                        </li>
+                                    <?php }
+                                }
+                                ?>
+                            </ul>
+                            <a href="./vendor/giveout_medications.php?id_request=<?= $request[0] ?>">Выдать</a>
+                        </div>
+                    <?php } ?>
+                </div>
             </div>
             <div class="right">
                 <h2>Перемещение препаратов между складами</h2>
@@ -147,7 +197,7 @@ $select_reasons = mysqli_fetch_all($select_reasons);
                     if (index !== -1) {
                         quantityInput.placeholder = quantities[index];
                     } else {
-                        quantityInput.placeholder = 'Выберите корректный склад';
+                        quantityInput.placeholder = 'Нет на складе';
                     }
                 }
             }
