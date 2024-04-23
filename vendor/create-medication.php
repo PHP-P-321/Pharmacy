@@ -3,12 +3,13 @@
 session_start(); // Начинаем сессию для работы с сессионными переменными
 
 if(empty($_COOKIE['id_user'])) {
-    header("Location: ./login.php");
+    header("Location: ../login.php");
 }
 
 require_once("../db/db.php"); // Подключаем файл с настройками базы данных
 
 $name_medication = $_POST['name_medication'];
+$quantity_medication = $_POST['quantity_medication'];
 $expiration_date = $_POST['expiration_date'];
 
 // Создаем переменную для хранения id_warehouse_
@@ -38,9 +39,9 @@ $select_medication = mysqli_fetch_assoc($select_medication);
 
 if(empty($select_medication)) {
     mysqli_query($connect, "INSERT INTO `medications`
-                            (`id_warehouse`, `name_medication`, `expiration_date`)
+                            (`id_warehouse`, `name_medication`, `quantity_medication`, `expiration_date`)
                             VALUES
-                            ('$id_warehouse_string', '$name_medication', '$expiration_date')
+                            ('$id_warehouse_string', '$name_medication', '$quantity_medication', '$expiration_date')
     ");
     header("Location: ../index.php");
 } else {
