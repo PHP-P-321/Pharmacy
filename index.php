@@ -142,6 +142,8 @@ $select_requests = mysqli_fetch_all($select_requests);
         </script>
         <script src="./assets/script/main.js"></script>
     <?php } elseif($_COOKIE['role'] == 2) { ?>
+        <br>
+        <br>
         <div class="search">
             <input type="text" id="searchInput" name="search" placeholder="Поиск">
             <select id="warehouseSelect" data-warehouses="<?= $select_warehouses_json ?>">
@@ -150,7 +152,9 @@ $select_requests = mysqli_fetch_all($select_requests);
                 <?php } ?>
             </select>
             <button id="searchButton">Искать</button>
+            <button id="clearButton">Сбросить</button>
         </div>
+        <br>
         
         <table border="1">
             <thead>
@@ -196,7 +200,106 @@ $select_requests = mysqli_fetch_all($select_requests);
         </table>
         
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-        <script src="./assets/script/search.js"></script>
+
+        <script>
+            $(document).ready(function() {
+                $('#searchButton').click(function() {
+                    var searchText = $('#searchInput').val();
+                    var selectedWarehouses = $('#warehouseSelect').val();
+                    
+                    $.ajax({
+                        url: './vendor/search-medications.php',
+                        type: 'POST',
+                        data: {
+                            search: searchText,
+                            warehouses: selectedWarehouses
+                        },
+                        success: function(response) {
+                            $('tbody').empty();
+                            
+                            var data = JSON.parse(response);
+                            
+                            // Проходимся по каждому элементу массива
+                            data.forEach(function(item) {
+                                var row = '<tr>'; // Создаем строку для нового элемента
+                                
+                                // Добавляем название препарата в первую ячейку
+                                row += '<td>' + item.name_medication + '</td>';
+                                
+                                // Разбиваем строку с количествами препарата на складах
+                                var quantities = item.quantity_medication.split(', ');
+                                
+                                // Разбиваем строку с id складов
+                                var warehouseIds = item.id_warehouse.split(', ');
+                                
+                                // Проходимся по каждому складу
+                                <?php foreach ($select_warehouses as $warehouse) { ?>
+                                    var warehouseId = '<?= $warehouse[0] ?>';
+                                    var warehouseName = '<?= $warehouse[1] ?>';
+                                    var index = warehouseIds.indexOf(warehouseId); // Ищем индекс склада
+                                    
+                                    if (index !== -1) {
+                                        // Если препарат есть на данном складе, выводим количество
+                                        row += '<td>' + quantities[index] + '</td>';
+                                    } else {
+                                        // Если препарата нет на данном складе, выводим "нет на складе"
+                                        row += '<td>нет на складе</td>';
+                                    }
+                                <?php } ?>
+                                
+                                row += '</tr>'; // Закрываем строку
+                                $('tbody').append(row); // Добавляем строку в таблицу
+                            });
+                        },
+                        error: function() {
+                            alert('Ошибка при выполнении AJAX запроса');
+                        }
+                    });
+                });
+            });
+            $(document).ready(function() {
+                // Обработчик события клика на кнопку "Сбросить"
+                $('#clearButton').click(function() {
+                    // Сброс значений поля ввода поиска
+                    $('#searchInput').val('');
+                    
+                    // Сброс выбранных значений в селекте для складов
+                    $('#warehouseSelect').val('');
+                    
+                    // Вывод данных после сброса
+                    $('tbody').empty(); // Очистка текущих данных
+                    
+                    <?php foreach ($select_not_deleted_medications as $medication) { ?>
+                        var row = '<tr>';
+                        row += '<td><?= $medication[2] ?></td>'; // Название препарата
+
+                        <?php 
+                        $quantities_on_warehouses = explode(', ', $medication[3]);
+                        $warehouse_ids = explode(', ', $medication[1]);
+                        
+                        foreach ($select_warehouses as $warehouse) {
+                            $warehouse_id = $warehouse[0];
+                            
+                            if (in_array($warehouse_id, $warehouse_ids)) {
+                                $warehouse_index = array_search($warehouse_id, $warehouse_ids);
+                                
+                                if ($warehouse_index !== false) {
+                                    echo "row += '<td>' + '{$quantities_on_warehouses[$warehouse_index]}' + '</td>';";
+                                } else {
+                                    echo "row += '<td>нет на складе</td>';";
+                                }
+                            } else {
+                                echo "row += '<td>нет на складе</td>';";
+                            }
+                        }
+                        ?>
+                        
+                        row += '</tr>';
+                        $('tbody').append(row);
+                    <?php } ?>
+                });
+            });
+        </script>
     <?php } ?>
 </body>
 </html>

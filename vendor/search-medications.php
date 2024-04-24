@@ -16,7 +16,7 @@ if(isset($_POST['search'])) {
     $searchQuery = $_POST['search'];
 
     // Выполняем запрос к базе данных для поиска препаратов
-    $query = "SELECT * FROM `medications` WHERE `name_medication` LIKE '%$searchQuery%'";
+    $query = "SELECT * FROM `medications` WHERE `id` NOT IN (SELECT `id_medication` FROM `deleted_medications`) AND `name_medication` LIKE '%$searchQuery%'";
     $result = mysqli_query($connect, $query);
 
     // Проверяем, есть ли результаты
