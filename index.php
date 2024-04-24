@@ -10,6 +10,7 @@ require_once("./db/db.php");
 
 $select_warehouses = mysqli_query($connect, "SELECT `id`, `name_warehouse` FROM `warehouses`");
 $select_warehouses = mysqli_fetch_all($select_warehouses);
+$select_warehouses_json = json_encode($select_warehouses);
 
 $select_not_deleted_medications = mysqli_query($connect, "SELECT * FROM `medications` WHERE `id` NOT IN (SELECT `id_medication` FROM `deleted_medications`);");
 $select_not_deleted_medications = mysqli_fetch_all($select_not_deleted_medications);
@@ -134,14 +135,68 @@ $select_requests = mysqli_fetch_all($select_requests);
                 </form>
             </div>
         </div>
+
+        <script>
+            // Передача данных через скриптовую переменную
+            var medicationsData = <?php echo json_encode($select_not_deleted_medications); ?>;
+        </script>
+        <script src="./assets/script/main.js"></script>
     <?php } elseif($_COOKIE['role'] == 2) { ?>
-
+        <div class="search">
+            <input type="text" id="searchInput" name="search" placeholder="Поиск">
+            <select id="warehouseSelect" data-warehouses="<?= $select_warehouses_json ?>">
+                <?php foreach ($select_warehouses as $warehouse) { ?>
+                    <option value="<?= $warehouse[0] ?>"><?= $warehouse[1] ?></option>
+                <?php } ?>
+            </select>
+            <button id="searchButton">Искать</button>
+        </div>
+        
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Препараты</th> <!-- Шапка для названия препаратов -->
+                    <?php foreach ($select_warehouses as $warehouse) { ?>
+                        <th><?= $warehouse[1] ?></th> <!-- Шапка для названий складов -->
+                    <?php } ?>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($select_not_deleted_medications as $medication) { ?>
+                    <tr>
+                        <td><?= $medication[2] ?></td> <!-- Название препарата -->
+                        <?php 
+                        // Разбиваем строку с количествами препарата на складах
+                        $quantities_on_warehouses = explode(', ', $medication[3]);
+                        // Разбиваем строку с id складов
+                        $warehouse_ids = explode(', ', $medication[1]);
+                        
+                        foreach ($select_warehouses as $warehouse) {
+                            $warehouse_id = $warehouse[0];
+                            // Проверяем, есть ли склад в списке складов для данного препарата
+                            if (in_array($warehouse_id, $warehouse_ids)) {
+                                // Находим индекс склада в массиве
+                                $warehouse_index = array_search($warehouse_id, $warehouse_ids);
+                                // Если индекс существует, выводим количество препарата
+                                if ($warehouse_index !== false) {
+                                    echo '<td>' . $quantities_on_warehouses[$warehouse_index] . '</td>';
+                                } else {
+                                    // Если индекс не найден, выводим "нет на складе"
+                                    echo '<td>нет на складе</td>';
+                                }
+                            } else {
+                                // Если склада нет в списке складов, выводим "нет на складе"
+                                echo '<td>нет на складе</td>';
+                            }
+                        }
+                        ?>
+                    </tr>
+                <?php } ?>
+            </tbody>
+        </table>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+        <script src="./assets/script/search.js"></script>
     <?php } ?>
-
-    <script>
-        // Передача данных через скриптовую переменную
-        var medicationsData = <?php echo json_encode($select_not_deleted_medications); ?>;
-    </script>
-    <script src="./assets/script/main.js"></script>
 </body>
 </html>
